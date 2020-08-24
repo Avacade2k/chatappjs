@@ -1,2 +1,1 @@
-# chatappjs
- 
+# grit-chat
