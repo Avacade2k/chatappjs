@@ -28,7 +28,7 @@ document.querySelector('.list-all-peers-button').addEventListener('click', () =>
             const button = document.createElement('button');
             button.innerText = peerId;
             button.classList.add("connect-button");
-            button.classList.add(`peerId-´$(peerId)`);
+            button.classList.add(`peerId-$(peerId)`);
             li.appendChild(button);
             ul.appendChild(li);
         });
@@ -36,9 +36,3 @@ document.querySelector('.list-all-peers-button').addEventListener('click', () =>
         peersEl.appendChild(ul);
     });
 });
-
-let bruh = (a, b) => a + b;
-
-function isEven(a) {
-    return a % 2 == 0;
-}
