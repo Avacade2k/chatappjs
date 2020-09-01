@@ -22,6 +22,7 @@
     });
     document.dispatchEvent(event);
     conn.on("data", (data) => {
+      printMessage(data, "them");
       console.log(data);
     });
   };
@@ -38,6 +39,17 @@
       document.dispatchEvent(event);
     });
   };
+
+  function printMessage(message, writer) {
+    const messageDiv = document.querySelector(".messages");
+    const newMessageDiv = document.createElement("div");
+    const messageWrapperDiv = document.createElement("div");
+    newMessageDiv.innerText = message;
+    messageWrapperDiv.classList.add("message");
+    messageWrapperDiv.classList.add(writer);
+    messageWrapperDiv.appendChild(newMessageDiv);
+    messageDiv.appendChild(messageWrapperDiv);
+  }
 
   peer = new Peer(myPeerId, {
     host: "glajan.com",
@@ -92,4 +104,13 @@
     });
     document.querySelector(peerIdClass).classList.add("connected");
   });
+
+  document
+    .querySelector(".send-new-message-button")
+    .addEventListener("click", () => {
+      let message = document.querySelector(".new-message").value;
+      conn.send(message);
+      console.log(message);
+      printMessage(message, "me");
+    });
 })();
