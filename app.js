@@ -1,6 +1,7 @@
 (function () {
   let peer = null;
   let conn = null;
+  let mediaConn = null;
   const peerOnOpen = (id) => {
     document.querySelector(".my-peer-id").innerHTML = id;
   };
@@ -40,6 +41,21 @@
     });
   };
 
+  const peerOnCall = (incomingCall) => {
+    if (confirm(`Answer call from $(incomingCall.peer)?`)) {
+      mediaConn && mediaConn.close();
+      navigator.mediaDevices
+        .getUserMedia({ audio: false, video: true })
+        .then((myStream) => {
+          mediaConn = incomingCall;
+          incomingCall.answer(myStream);
+          mediaConn.on("stream", mediaConnOnStream);
+        });
+    } else {
+      console.log("not answered");
+    }
+  };
+
   function printMessage(message, writer) {
     const messageDiv = document.querySelector(".messages");
     const newMessageDiv = document.createElement("div");
@@ -72,6 +88,61 @@
   peer.on("open", peerOnOpen);
   peer.on("error", peerOnError);
   peer.on("connection", peerOnConnection);
+  peer.on("call", peerOnCall);
+
+  navigator.mediaDevices
+    .getUserMedia({ audio: false, video: true })
+    .then((stream) => {
+      const video = document.querySelector(".video-container.me video");
+      video.muted = true;
+      video.srcObject = stream;
+    });
+
+  document.querySelector(".new-message").addEventListener("keyup", (event) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      document.querySelector(".send-new-message-button").click();
+    }
+  });
+
+  const mediaConnOnStream = (theirStream) => {
+    const video = document.querySelector(".video-container.them video");
+    video.srcObject = theirStream;
+  };
+
+  const startVideoCall = () => {
+    console.log("start");
+    const video = document.querySelector(".video-container.them");
+    const peerId = video.querySelector(".name").innerText;
+    const startButton = video.querySelector(".start");
+    const stopButton = video.querySelector(".stop");
+    startButton.classList.remove("active");
+    stopButton.classList.add("active");
+
+    navigator.mediaDevices
+      .getUserMedia({ audio: false, video: true })
+      .then((myStream) => {
+        mediaConn = peer.call(peerId, myStream);
+        mediaConn.on("stream", mediaConnOnStream);
+      });
+  };
+
+  const stopVideoCall = () => {
+    console.log("video stop");
+    const video = document.querySelector(".video-container.them");
+    const startButton = video.querySelector(".start");
+    const stopButton = video.querySelector(".stop");
+    stopButton.classList.remove("active");
+    startButton.classList.add("active");
+  };
+
+  document
+    .querySelector(".video-container.them .start")
+    .addEventListener("click", startVideoCall);
+
+  document
+    .querySelector(".video-container.them .stop")
+    .addEventListener("click", stopVideoCall);
 
   document
     .querySelector(".list-all-peers-button")
@@ -103,6 +174,12 @@
       el.classList.remove("connected");
     });
     document.querySelector(peerIdClass).classList.add("connected");
+
+    const video = document.querySelector(".video-container.them");
+    video.classList.add("connected");
+    video.querySelector(".name").innerText = peerId;
+    video.querySelector(".stop").classList.remove("active");
+    video.querySelector(".start").classList.add("active");
   });
 
   document
@@ -112,5 +189,6 @@
       conn.send(message);
       console.log(message);
       printMessage(message, "me");
+      document.querySelector(".new-message").innerText = "";
     });
 })();
